@@ -343,6 +343,21 @@ td{
     color:#ddd;
 }
 
+
+.edit{
+    background:rgba(151,95,255,.13);
+    border:1px solid rgba(151,95,255,.35);
+    color:#c8adff;
+    padding:7px 10px;
+    margin:0 4px 0 0;
+    box-shadow:none;
+}
+
+.edit:hover{
+    border-color:#a477ff;
+    color:#fff;
+    box-shadow:0 0 10px rgba(151,95,255,.25);
+}
 .delete{
     background:none;
     border:1px solid rgba(255,100,160,.25);

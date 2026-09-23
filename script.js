@@ -40,6 +40,8 @@ let selected = null;
 
 let calendar = null;
 
+let editIndex = -1;
+
 
 /* =========================================================
    تبدیل میلادی به شمسی
@@ -680,18 +682,48 @@ function save(){
 
 
 /* =========================================================
+   مرتب‌سازی بر اساس تاریخ
+========================================================= */
+
+function dateValue(date){
+
+    const p = String(date).split("/").map(Number);
+
+    return (p[0] || 0) * 10000 + (p[1] || 0) * 100 + (p[2] || 0);
+}
+
+function sortedRecords(){
+
+    return records.slice().sort(function(a,b){
+        return dateValue(a.date) - dateValue(b.date);
+    });
+}
+
+
+/* =========================================================
    حذف
 ========================================================= */
 
 function removeRecord(index){
 
-    records.splice(
-        index,
-        1
-    );
+    const ordered = sortedRecords();
+    const target = ordered[index];
+    const realIndex = records.indexOf(target);
+
+    if(realIndex === -1){
+        return;
+    }
+
+    records.splice(realIndex,1);
+
+    if(editIndex === realIndex){
+        editIndex = -1;
+        $("addBtn").textContent = "＋ ثبت ساعت کاری";
+        $("start").value = "";
+        $("end").value = "";
+    }
 
     save();
-
     render();
 }
 
@@ -791,7 +823,9 @@ function render(){
         "block";
 
 
-    records.forEach(
+    const orderedRecords = sortedRecords();
+
+    orderedRecords.forEach(
         (r,index) => {
 
             const tr =
@@ -808,6 +842,12 @@ function render(){
                 <td>${formatDuration(r.min)}</td>
                 <td>
                     <button
+                        class="edit"
+                        onclick="editRecord(${index})"
+                    >
+                        ویرایش
+                    </button>
+                    <button
                         class="delete"
                         onclick="removeRecord(${index})"
                     >
@@ -823,6 +863,35 @@ function render(){
 
 
     drawCharts(total);
+}
+
+
+/* =========================================================
+   ویرایش ثبت
+========================================================= */
+
+function editRecord(index){
+
+    const ordered = sortedRecords();
+    const r = ordered[index];
+
+    if(!r){
+        return;
+    }
+
+    editIndex = records.indexOf(r);
+
+    const parts = String(r.date).split("/").map(Number);
+
+    selected = [parts[0], parts[1], parts[2]];
+
+    $("dateBtn").textContent = r.date;
+    $("dayDisplay").textContent = r.day;
+    $("start").value = r.start;
+    $("end").value = r.end;
+    $("addBtn").textContent = "✓ ذخیره ویرایش";
+
+    window.scrollTo({top:0, behavior:"smooth"});
 }
 
 
@@ -885,7 +954,7 @@ $("addBtn").onclick =
             )}`;
 
 
-        records.push({
+        const newRecord = {
 
             date:dateString,
 
@@ -903,7 +972,16 @@ $("addBtn").onclick =
                 start,
                 end
             )
-        });
+        };
+
+        if(editIndex !== -1){
+            records[editIndex] = newRecord;
+            editIndex = -1;
+            $("addBtn").textContent = "＋ ثبت ساعت کاری";
+        }
+        else{
+            records.push(newRecord);
+        }
 
 
         save();
@@ -1112,7 +1190,7 @@ ${fa(days)}
 
 <tbody>
 
-${records.map(
+${sortedRecords().map(
 r => `
 
 <tr>
